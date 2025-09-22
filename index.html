@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Solar Bill Calculator</title>
+<style>
+  :root{
+    --bg:#171a21; --panel:#c7d5e0; --ink:#0b1220;
+    --card:#0f1d2c; --card-2:#1b2838; --accent:#66c0f4;
+    --primary:#16c016; --white:#fff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--white);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  main{min-height:100vh;display:grid;place-items:center;padding:24px}
+  .panel{width:min(940px,92vw);background:var(--panel);color:var(--ink);border-radius:10px;padding:40px 32px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .panel h2{margin:0 0 24px 0;font-weight:800;letter-spacing:.4px}
+  .card{background:var(--card-2);color:var(--white);border-radius:10px;padding:18px;display:flex;align-items:center;gap:14px}
+  .stack{display:grid;gap:18px}
+  label{font-size:14px;letter-spacing:.3px}
+  .input-wrap{display:flex;align-items:center;gap:10px;background:#0e1a27;border-radius:8px;padding:12px}
+  .peso{opacity:.9}
+  input[type="number"]{flex:1;min-width:0;background:#fff;border:0;border-radius:6px;padding:10px 12px;font-size:16px;color:#0b1220}
+  .btn-row{display:flex;gap:12px;justify-content:center;margin-top:22px}
+  button{border:0;border-radius:8px;padding:12px 18px;font-weight:800;letter-spacing:.3px;cursor:pointer}
+  .btn-primary{background:var(--primary);color:#05280b}
+  .btn-accent{background:var(--accent);color:#08263a}
+  .footer{display:flex;justify-content:space-between;font-size:12px;color:#0c2540;opacity:.9;margin-top:14px}
+  .results{display:none}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .result-card{background:var(--card);color:#eaf2fa;border-radius:10px;padding:20px;min-height:260px}
+  .pill{display:inline-block;background:#dbe7f2;color:#0b2239;font-weight:800;border-radius:8px;padding:6px 12px;margin-bottom:10px}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;margin-top:8px}
+  .kv b{white-space:nowrap}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+  .notes{background:#eaf2fa;color:#0b2239;border-radius:10px;padding:16px;margin-top:18px}
+  .center{display:flex;gap:12px;justify-content:center;margin-top:18px}
+  @media (max-width:800px){ .cols{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <main>
+    <!-- INPUT -->
+    <section id="screen-input" class="panel" role="region" aria-labelledby="title-a">
+      <h2 id="title-a">Solar Bill Calculator</h2>
+      <div class="stack">
+        <div class="card">
+          <div style="width:100%">
+            <label for="bill">AVERAGE MONTHLY BILL:</label>
+            <div class="input-wrap">
+              <span class="peso">₱</span>
+              <input id="bill" type="number" inputmode="decimal" placeholder="15000" min="0" step="0.01" />
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="width:100%">
+            <label for="rate">ELECTRICITY COSTS (kWh):</label>
+            <div class="input-wrap">
+              <span class="peso">₱</span>
+              <input id="rate" type="number" inputmode="decimal" placeholder="11" min="0.01" step="0.01" />
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button id="calcBtn" class="btn-primary">CALCULATE</button>
+        </div>
+        <div class="center">
+          <button class="btn-accent" id="advBtnTop" type="button">ADVANCE MODE</button>
+        </div>
+        <div class="footer">
+          <span>Created by TIMELESS/KRASHEDD</span>
+          <span>Created for LEDSOLARTECH</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="screen-results" class="panel results" role="region" aria-labelledby="title-b">
+      <h2 id="title-b">Results</h2>
+
+      <div class="result-card" style="margin-bottom:14px">
+        <span class="pill">LOAD SUMMARY</span>
+        <div class="kv mono">
+          <b>Monthly bill:</b><span id="r_bill"></span>
+          <b>Rate:</b><span id="r_rate"></span>
+          <b>Monthly usage:</b><span id="r_mkwh"></span>
+          <b>Daily usage:</b><span id="r_dkwh"></span>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div class="result-card">
+          <span class="pill">REDUCED BILL</span>
+          <div class="kv mono">
+            <b>System size range:</b><span id="rb_sys"></span>
+            <b>600W (target 50%):</b><span id="rb_600_low"></span>
+            <b>700W (target 50%):</b><span id="rb_700_low"></span>
+            <b>600W (target 70%):</b><span id="rb_600_high"></span>
+            <b>700W (target 70%):</b><span id="rb_700_high"></span>
+            <b>Est. savings/month:</b><span id="rb_save"></span>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <span class="pill">ZERO BILL</span>
+          <div class="kv mono">
+            <b>System size (100%):</b><span id="zb_sys"></span>
+            <b>600W panels:</b><span id="zb_600"></span>
+            <b>700W panels:</b><span id="zb_700"></span>
+            <b>Est. savings/month:</b><span id="zb_save"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes">
+        <strong>Notes</strong>
+        <p>
+          Reduced Bill sizes are designed to offset approximately <b>50–70%</b> of your usage (3.5 peak sun hours).<br/>
+          Zero Bill size targets a <b>100%</b> offset (assumes successful Net Metering and 3.5 peak sun hours).<br/>
+          <b>Savings vary depending on the electricity rate (PHP/kWh) you input.</b>
+        </p>
+      </div>
+
+      <div class="center">
+        <button id="againBtn" class="btn-primary">CALCULATE AGAIN</button>
+        <button class="btn-accent" id="advBtnBottom" type="button">ADVANCE MODE</button>
+      </div>
+
+      <div class="footer">
+        <span>Created by TIMELESS/KRASHEDD</span>
+        <span>Created for LEDSOLARTECH</span>
+      </div>
+    </section>
+  </main>
+
+<script>
+  const SUN_HOURS = 3.5;
+  const REDUCED = [0.5, 0.7]; // 50–70% target
+
+  const fmtPHP = x => "PHP " + Number(x).toLocaleString(undefined,{maximumFractionDigits:0});
+  const fmt2 = x => Number(x).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+  const ceil = Math.ceil;
+
+  const screenInput = document.getElementById('screen-input');
+  const screenResults = document.getElementById('screen-results');
+
+  document.getElementById('calcBtn').addEventListener('click', calculate);
+  document.getElementById('againBtn').addEventListener('click', () => {
+    screenResults.style.display = 'none';
+    screenInput.style.display = 'block';
+    document.getElementById('bill').focus();
+  });
+  document.getElementById('advBtnTop').onclick = document.getElementById('advBtnBottom').onclick =
+    () => alert('Advance Mode coming soon.');
+
+  function calculate(){
+    const bill = parseFloat(document.getElementById('bill').value);
+    const rate = parseFloat(document.getElementById('rate').value);
+    if (!(bill > 0) || !(rate > 0)) { alert("Please enter positive numbers for bill and rate."); return; }
+
+    const monthly_kwh = bill / rate;
+    const daily_kwh = monthly_kwh / 30.0;
+
+    // ZERO BILL (100% offset)
+    const zero_sys_kw = daily_kwh / SUN_HOURS;
+    const zb_600 = ceil(zero_sys_kw / 0.600);
+    const zb_700 = ceil(zero_sys_kw / 0.700);
+    const zero_savings = bill; // full elimination of the monthly bill
+
+    // REDUCED BILL (50–70% targets)
+    const rb_sys_kw_low  = (daily_kwh / SUN_HOURS) * REDUCED[0];
+    const rb_sys_kw_high = (daily_kwh / SUN_HOURS) * REDUCED[1];
+    const rb_600_low  = ceil(rb_sys_kw_low  / 0.600);
+    const rb_700_low  = ceil(rb_sys_kw_low  / 0.700);
+    const rb_600_high = ceil(rb_sys_kw_high / 0.600);
+    const rb_700_high = ceil(rb_sys_kw_high / 0.700);
+    const rb_save_low = bill * REDUCED[0];
+    const rb_save_high= bill * REDUCED[1];
+
+    // write summary
+    document.getElementById('r_bill').textContent = fmtPHP(bill);
+    document.getElementById('r_rate').textContent = fmtPHP(rate) + "/kWh";
+    document.getElementById('r_mkwh').textContent = fmt2(monthly_kwh) + " kWh";
+    document.getElementById('r_dkwh').textContent = fmt2(daily_kwh) + " kWh/day";
+
+    // zero bill
+    document.getElementById('zb_sys').textContent = fmt2(zero_sys_kw) + " kW";
+    document.getElementById('zb_600').textContent = zb_600 + " panels";
+    document.getElementById('zb_700').textContent = zb_700 + " panels";
+    document.getElementById('zb_save').textContent = fmtPHP(zero_savings);
+
+    // reduced bill
+    document.getElementById('rb_sys').textContent = fmt2(rb_sys_kw_low) + " – " + fmt2(rb_sys_kw_high) + " kW";
+    document.getElementById('rb_600_low').textContent  = rb_600_low  + " panels";
+    document.getElementById('rb_700_low').textContent  = rb_700_low  + " panels";
+    document.getElementById('rb_600_high').textContent = rb_600_high + " panels";
+    document.getElementById('rb_700_high').textContent = rb_700_high + " panels";
+    document.getElementById('rb_save').textContent = fmtPHP(rb_save_low) + " – " + fmtPHP(rb_save_high);
+
+    screenInput.style.display = 'none';
+    screenResults.style.display = 'block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+</script>
+</body>
+</html>
